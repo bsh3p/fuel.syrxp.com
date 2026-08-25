@@ -88,6 +88,7 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
   display: none; background: var(--bg);
 }
 #map.visible { display: block; }
+#map .leaflet-control-zoom { position: fixed; bottom: 275px; right: 12px; z-index: 3; }
 #map .leaflet-control-zoom a { background: var(--surface); color: var(--text); border-color: var(--border); }
 #map .leaflet-control-zoom a:hover { background: var(--card); }
 .leaflet-popup-content-wrapper { background: var(--card); color: var(--text); border-radius: var(--radius); border: 1px solid var(--border); }
@@ -290,7 +291,7 @@ const MOCK_STATIONS = [
   { name: 'BP South Brisbane', address: '42 Melbourne St, South Brisbane QLD 4101', lat: -27.47453, lon: 153.01730, price: 163.5 },
   { name: 'Caltex West End', address: '92 Boundary St, West End QLD 4101', lat: -27.48396, lon: 153.01149, price: 160.7 },
   { name: 'United Mt Gravatt', address: '1982 Logan Rd, Mt Gravatt QLD 4122', lat: -27.53336, lon: 153.07487, price: 157.5 },
-  { name: '7-Eleven Fairfield', address: '601 Ipswich Rd, Fairfield QLD 4103', lat: -27.508318, lon: 153.024955, price: 159.9 },
+  { name: '7-Eleven Fairfield', address: '180 Fairfield Rd, Fairfield QLD 4103', lat: -27.50908, lon: 153.02568, price: 159.9 },
   { name: 'BP Moorooka', address: 'Ipswich Rd & Koopman St, Moorooka QLD 4105', lat: -27.535042, lon: 153.014338, price: 161.5 },
   { name: 'Shell Yeronga', address: '504 Ipswich Rd, Yeronga QLD 4104', lat: -27.511462, lon: 153.032596, price: 160.3 },
 ];

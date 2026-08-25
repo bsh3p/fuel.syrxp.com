@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Fuel Finder — Brisbane ULP95</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root {
+  --bg: #0b0e14;
+  --surface: #141820;
+  --card: #1c2130;
+  --border: #2a3040;
+  --text: #e8ecf4;
+  --text-dim: #8892a8;
+  --green: #34d399;
+  --yellow: #fbbf24;
+  --red: #f87171;
+  --accent: #60a5fa;
+  --radius: 12px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); }
+#map { position: absolute; top: 0; left: 0; right: 0; bottom: 260px; z-index: 1; }
+#map .leaflet-control-zoom a { background: var(--surface); color: var(--text); border-color: var(--border); }
+#map .leaflet-control-zoom a:hover { background: var(--card); }
+#map .leaflet-control-attribution { color: var(--text-dim); background: transparent; }
+.leaflet-popup-content-wrapper { background: var(--card); color: var(--text); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+.leaflet-popup-tip { background: var(--card); border: 1px solid var(--border); }
+.leaflet-popup-close-button { color: var(--text-dim) !important; }
+
+/* Bottom panel */
+#panel {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 260px; z-index: 2;
+  background: var(--surface); border-top: 1px solid var(--border);
+  display: flex; flex-direction: column; transition: height 0.3s ease;
+}
+#panel.expanded { height: 70vh; }
+#panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+#panel-header h2 { font-size: 15px; font-weight: 600; }
+#panel-toggle { background: none; border: none; color: var(--text-dim); font-size: 18px; cursor: pointer; padding: 4px; }
+#panel-toggle:hover { color: var(--text); }
+#panel-body { flex: 1; overflow-y: auto; padding: 8px 0; }
+
+/* Station card */
+.station-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 16px; border-bottom: 1px solid var(--border); cursor: pointer;
+  transition: background 0.15s;
+}
+.station-card:hover { background: var(--card); }
+.station-card:last-child { border-bottom: none; }
+.station-rank {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; flex-shrink: 0;
+}
+.rank-1 { background: #f59e0b; color: #000; }
+.rank-2 { background: #94a3b8; color: #000; }
+.rank-3 { background: #d97706; color: #000; }
+.station-info { flex: 1; min-width: 0; }
+.station-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.station-address { font-size: 12px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.station-meta { display: flex; gap: 12px; margin-top: 2px; font-size: 11px; color: var(--text-dim); }
+.station-price { text-align: right; flex-shrink: 0; }
+.station-cpl { font-size: 17px; font-weight: 700; }
+.station-cpl.good { color: var(--green); }
+.station-cpl.ok { color: var(--yellow); }
+.station-cpl.bad { color: var(--red); }
+.station-benefit { font-size: 11px; color: var(--green); }
+
+/* Nav button */
+.station-nav-btn {
+  background: var(--accent); color: #000; border: none; border-radius: 8px;
+  padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer;
+  white-space: nowrap; flex-shrink: 0; transition: opacity 0.15s;
+}
+.station-nav-btn:hover { opacity: 0.85; }
+
+/* Mode bar */
+#mode-bar {
+  position: absolute; top: 12px; left: 12px; right: 12px; z-index: 3;
+  display: flex; gap: 8px; pointer-events: none;
+}
+#mode-bar > * { pointer-events: auto; }
+#find-me-btn, #mode-toggle {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 10px 16px; color: var(--text); font-size: 13px; font-weight: 500; cursor: pointer;
+  transition: background 0.15s; display: flex; align-items: center; gap: 6px;
+}
+#find-me-btn:hover, #mode-toggle:hover { background: var(--card); }
+#find-me-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+#mode-toggle { flex: 1; text-align: center; justify-content: center; }
+.mode-dest { display: none; }
+.mode-dest.visible { display: flex; gap: 6px; flex: 1; }
+.mode-dest input { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; color: var(--text); font-size: 13px; outline: none; }
+.mode-dest input:focus { border-color: var(--accent); }
+.mode-dest input::placeholder { color: var(--text-dim); }
+.mode-dest button { background: var(--accent); color: #000; border: none; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.mode-dest button:hover { opacity: 0.85; }
+
+/* Loading overlay */
+#loading {
+  display: none; position: absolute; top: 60px; left: 50%; transform: translateX(-50%); z-index: 4;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 10px 20px; font-size: 13px; color: var(--text-dim);
+}
+#loading.visible { display: flex; align-items: center; gap: 8px; }
+.spinner { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Error toast */
+#toast {
+  display: none; position: absolute; bottom: 270px; left: 12px; right: 12px; z-index: 5;
+  background: #7f1d1d; color: #fca5a5; border: 1px solid #991b1b; border-radius: var(--radius);
+  padding: 12px 16px; font-size: 13px;
+}
+#toast.visible { display: block; }
+
+/* Price marker */
+.price-marker {
+  width: 10px; height: 10px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.price-marker.green { background: var(--green); }
+.price-marker.yellow { background: var(--yellow); }
+.price-marker.red { background: var(--red); }
+
+/* Popup content */
+.popup-content { min-width: 180px; }
+.popup-content h3 { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+.popup-content .addr { font-size: 12px; color: var(--text-dim); margin-bottom: 6px; }
+.popup-content .popup-row { display: flex; justify-content: space-between; font-size: 12px; padding: 2px 0; }
+.popup-content .popup-row span:last-child { font-weight: 600; }
+.popup-nav { margin-top: 8px; width: 100%; background: var(--accent); color: #000; border: none; border-radius: 8px; padding: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+/* Status indicator */
+#status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+#status-dot.green { background: var(--green); }
+#status-dot.yellow { background: var(--yellow); }
+#status-dot.red { background: var(--red); }
+
+@media (min-width: 768px) {
+  #map { bottom: 300px; }
+  #panel { height: 300px; }
+  #panel.expanded { height: 60vh; }
+}
+</style>
+</head>
+<body>
+
+<div id="mode-bar">
+  <button id="find-me-btn">📍 Find Me</button>
+  <button id="mode-toggle">⛽ Closest</button>
+  <div class="mode-dest" id="mode-dest">
+    <input type="text" id="dest-input" placeholder="Destination (e.g. Indooroopilly)" />
+    <button id="go-btn">Go</button>
+  </div>
+</div>
+
+<div id="loading" class="visible">
+  <div class="spinner"></div>
+  <span>Finding stations...</span>
+</div>
+
+<div id="toast"></div>
+
+<div id="map"></div>
+
+<div id="panel">
+  <div id="panel-header">
+    <h2 id="panel-title">Top Picks</h2>
+    <button id="panel-toggle">▲</button>
+  </div>
+  <div id="panel-body"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════
+const VEHICLE = { tankL: 60, consumption: 0.086, detourCostPerKm: 5 };
+const OSRM_BASE = 'https://router.project-osrm.org';
+const OSRM_TIMEOUT = 8000;
+
+// Fallback mock stations until QLD API key arrives
+const MOCK_STATIONS = [
+  { name: '7-Eleven Fairfield', address: '601 Ipswich Rd, Fairfield QLD 4103', lat: -27.5061, lon: 153.0178, price: 159.9 },
+  { name: 'BP Moorooka', address: 'Ipswich Rd & Koopman St, Moorooka QLD 4105', lat: -27.5119, lon: 153.0150, price: 161.5 },
+  { name: 'Caltex Annerley', address: '433 Ipswich Rd, Annerley QLD 4103', lat: -27.5036, lon: 153.0208, price: 158.9 },
+  { name: 'Shell Yeronga', address: '504 Ipswich Rd, Yeronga QLD 4104', lat: -27.5083, lon: 153.0133, price: 160.3 },
+  { name: 'United Greenslopes', address: '871 Logan Rd, Greenslopes QLD 4120', lat: -27.5088, lon: 153.0500, price: 157.9 },
+  { name: '7-Eleven Woolloongabba', address: '186 Logan Rd, Woolloongabba QLD 4102', lat: -27.4884, lon: 153.0368, price: 158.5 },
+  { name: 'BP Coorparoo', address: '210 Old Cleveland Rd, Coorparoo QLD 4151', lat: -27.4938, lon: 153.0564, price: 162.9 },
+  { name: 'Caltex Stones Corner', address: '618 Logan Rd, Stones Corner QLD 4120', lat: -27.4989, lon: 153.0431, price: 159.5 },
+  { name: 'Ampol Eight Mile Plains', address: '2599 Logan Rd, Eight Mile Plains QLD 4113', lat: -27.5778, lon: 153.0875, price: 156.9 },
+  { name: 'Shell Indooroopilly', address: '257 Moggill Rd, Indooroopilly QLD 4068', lat: -27.5008, lon: 152.9828, price: 160.9 },
+  { name: '7-Eleven Toowong', address: '127 Sherwood Rd, Toowong QLD 4066', lat: -27.4850, lon: 152.9903, price: 158.3 },
+  { name: 'Puma Milton', address: '51 Milton Rd, Milton QLD 4064', lat: -27.4714, lon: 153.0028, price: 161.9 },
+  { name: 'BP South Brisbane', address: '42 Melbourne St, South Brisbane QLD 4101', lat: -27.4769, lon: 153.0125, price: 163.5 },
+  { name: 'Caltex West End', address: '92 Boundary St, West End QLD 4101', lat: -27.4772, lon: 153.0075, price: 160.7 },
+  { name: 'United Mt Gravatt', address: '1982 Logan Rd, Mt Gravatt QLD 4122', lat: -27.5364, lon: 153.0853, price: 157.5 },
+];
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let userLoc = null;
+let stations = [];
+let rankedStations = [];
+let isEnRoute = false;
+let isExpanded = false;
+let map = null;
+let markers = [];
+let watchId = null;
+
+// ═══════════════════════════════════════════
+// INIT MAP
+// ═══════════════════════════════════════════
+function initMap() {
+  map = L.map('map', {
+    zoomControl: true,
+    attributionControl: true
+  }).setView([-27.505, 153.02], 13);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
+}
+
+// ═══════════════════════════════════════════
+// OSRM ROUTING
+// ═══════════════════════════════════════════
+async function getDrivingDistances(origin, destinations) {
+  if (destinations.length === 0) return [];
+  // OSRM table endpoint: lon,lat;lon,lat;...
+  const coords = `${origin.lon},${origin.lat};` + destinations.map(s => `${s.lon},${s.lat}`).join(';');
+  const url = `${OSRM_BASE}/table/v1/driving/${coords}?sources=0&annotations=distance`;
+  
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), OSRM_TIMEOUT);
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    if (!res.ok) throw new Error(`OSRM ${res.status}`);
+    const data = await res.json();
+    if (data.code !== 'Ok' || !data.distances) throw new Error('OSRM bad response');
+    // distances[0][1..N] in metres
+    const dists = data.distances[0];
+    // Skip index 0 (self), map rest
+    return destinations.map((s, i) => dists[i+1] ? Math.round(dists[i+1]) : null);
+  } catch (e) {
+    console.warn('OSRM table failed, using fallback:', e.message);
+    // Fallback: crow-flies haversine
+    return destinations.map(s => Math.round(haversine(origin, s) * 1000));
+  }
+}
+
+function haversine(a, b) {
+  const R = 6371;
+  const dLat = (b.lat - a.lat) * Math.PI / 180;
+  const dLon = (b.lon - a.lon) * Math.PI / 180;
+  const lat1 = a.lat * Math.PI / 180;
+  const lat2 = b.lat * Math.PI / 180;
+  const x = Math.sin(dLat/2)**2 + Math.sin(dLon/2)**2 * Math.cos(lat1) * Math.cos(lat2);
+  return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1-x));
+}
+
+// ═══════════════════════════════════════════
+// NET BENEFIT CALC
+// ═══════════════════════════════════════════
+// Baseline = closest station (by driving distance)
+// Benefit = (baselinePrice - candidatePrice) * 60L - extraKm * $5 - extraKm * 0.086 * candidatePrice
+function calcNetBenefit(stationsWithDist) {
+  if (stationsWithDist.length === 0) return [];
+  
+  const sorted = [...stationsWithDist].sort((a, b) => a.driveM - b.driveM);
+  const baseline = sorted[0];
+  const baselineCpl = (baseline.price || 159.9) / 100; // cents/L -> $/L
+  
+  return stationsWithDist.map(s => {
+    const distKm = s.driveM / 1000;
+    const baselineKm = baseline.driveM / 1000;
+    const extraKm = distKm - baselineKm;
+    const cpl = (s.price || 159.9) / 100;
+    
+    const fillSaving = (baselineCpl - cpl) * VEHICLE.tankL;
+    const detourCost = extraKm * VEHICLE.detourCostPerKm;
+    const fuelCost = extraKm * VEHICLE.consumption * cpl;
+    const benefit = fillSaving - detourCost - fuelCost;
+    
+    const fillCost = cpl * VEHICLE.tankL;
+    
+    return {
+      ...s,
+      driveKm: Math.round(distKm * 10) / 10,
+      extraKm: Math.round(extraKm * 10) / 10,
+      netBenefit: Math.round(benefit * 100) / 100,
+      fillCost: Math.round(fillCost * 100) / 100,
+      isBaseline: s === baseline
+    };
+  }).sort((a, b) => b.netBenefit - a.netBenefit);
+}
+
+// ═══════════════════════════════════════════
+// API DATA (pluggable — swap with QLD API)
+// ═══════════════════════════════════════════
+async function fetchStations(lat, lon) {
+  // When QLD API key comes in, replace this:
+  // const res = await fetch(`https://www.fuelpricesqld.com.au/api/v1/sites&lat=${lat}&lon=${lon}&radius=10`);
+  // Filter to ULP95, transform to {name, address, lat, lon, price}
+  
+  // For now: filter mock stations within ~15km of user
+  const userPt = { lat, lon };
+  return MOCK_STATIONS
+    .map(s => ({ ...s, dist: haversine(userPt, s) }))
+    .filter(s => s.dist < 15)
+    .sort((a, b) => a.dist - b.dist);
+}
+
+// ═══════════════════════════════════════════
+// CORE RANK FLOW
+// ═══════════════════════════════════════════
+async function runRank(lat, lon, destLat, destLon) {
+  showLoading(true);
+  hideToast();
+  
+  userLoc = { lat, lon };
+  
+  try {
+    // 1. Fetch stations
+    stations = await fetchStations(lat, lon);
+    if (stations.length === 0) {
+      showToast('No fuel stations found nearby');
+      showLoading(false);
+      return;
+    }
+    
+    // 2. Get real driving distances
+    const pts = stations.map(s => ({ lat: s.lat, lon: s.lon }));
+    const distances = await getDrivingDistances({ lat, lon }, pts);
+    stations.forEach((s, i) => { s.driveM = distances[i] || Math.round(s.dist * 1000); });
+    
+    // 3. Calculate net benefit
+    rankedStations = calcNetBenefit(stations);
+    
+    // 4. Update map
+    updateMap();
+    
+    // 5. Update panel
+    updatePanel();
+    
+    // 6. Fit map to show all stations
+    if (stations.length > 0) {
+      const bounds = L.latLngBounds(stations.map(s => [s.lat, s.lon]));
+      bounds.extend([lat, lon]);
+      map.fitBounds(bounds, { padding: [50, 160], maxZoom: 15 });
+    }
+    
+  } catch (e) {
+    showToast('Error finding stations: ' + e.message);
+  }
+  
+  showLoading(false);
+}
+
+// ═══════════════════════════════════════════
+// MAP
+// ═══════════════════════════════════════════
+function updateMap() {
+  // Clear old markers
+  markers.forEach(m => map.removeLayer(m));
+  markers = [];
+  
+  // User marker
+  if (userLoc) {
+    const userMarker = L.circleMarker([userLoc.lat, userLoc.lon], {
+      radius: 8, color: '#60a5fa', fillColor: '#60a5fa', fillOpacity: 0.3, weight: 2
+    }).addTo(map);
+    userMarker.bindPopup('📍 You are here');
+    markers.push(userMarker);
+  }
+  
+  // Station markers
+  const bestPrice = Math.min(...rankedStations.filter(s => s.price).map(s => s.price));
+  const worstPrice = Math.max(...rankedStations.filter(s => s.price).map(s => s.price));
+  
+  rankedStations.forEach((s, i) => {
+    const isCheap = s.price <= bestPrice + (worstPrice - bestPrice) * 0.3;
+    const isExp = s.price >= worstPrice - (worstPrice - bestPrice) * 0.3;
+    
+    const color = isCheap ? '#34d399' : isExp ? '#f87171' : '#fbbf24';
+    const size = i < 3 ? 14 : 10;
+    
+    const marker = L.circleMarker([s.lat, s.lon], {
+      radius: size, color: color, fillColor: color, fillOpacity: 0.7, weight: 2
+    }).addTo(map);
+    
+    const popupHtml = `
+      <div class="popup-content">
+        <h3>${s.name}</h3>
+        <div class="addr">${s.address}</div>
+        <div class="popup-row"><span>Price</span><span>${s.price.toFixed(1)}¢/L</span></div>
+        <div class="popup-row"><span>Driving</span><span>${s.driveKm} km</span></div>
+        ${s.isBaseline ? '' : `<div class="popup-row"><span>Net benefit</span><span style="color:${s.netBenefit > 0 ? '#34d399' : '#f87171'}">${s.netBenefit > 0 ? '+' : ''}$${s.netBenefit.toFixed(2)}</span></div>`}
+        <button class="popup-nav" onclick="navigateTo(${s.lat}, ${s.lon})">Navigate →</button>
+      </div>`;
+    
+    marker.bindPopup(popupHtml);
+    markers.push(marker);
+  });
+}
+
+function navigateTo(lat, lon) {
+  const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}&travelmode=driving`;
+  window.open(url, '_blank');
+}
+
+// ═══════════════════════════════════════════
+// PANEL
+// ═══════════════════════════════════════════
+function updatePanel() {
+  const body = document.getElementById('panel-body');
+  const title = document.getElementById('panel-title');
+  
+  if (rankedStations.length === 0) {
+    body.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-dim)">Tap "Find Me" to locate stations</div>';
+    return;
+  }
+  
+  const best = rankedStations[0];
+  title.textContent = `Best: ${best.name} — $${best.fillCost.toFixed(2)}`;
+  
+  body.innerHTML = rankedStations.map((s, i) => {
+    const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : 'rank-3';
+    const priceClass = s.netBenefit > 2 ? 'good' : s.netBenefit > 0 ? 'ok' : 'bad';
+    
+    return `
+      <div class="station-card" onclick="focusStation(${i})">
+        <div class="station-rank ${rankClass}">${i + 1}</div>
+        <div class="station-info">
+          <div class="station-name">${s.name}</div>
+          <div class="station-address">${s.address}</div>
+          <div class="station-meta">
+            <span>🚗 ${s.driveKm} km</span>
+            <span>⛽ ${s.fillCost.toFixed(2)}</span>
+            ${s.netBenefit > 0.01 ? `<span style="color:var(--green)">+$${s.netBenefit.toFixed(2)}</span>` : s.netBenefit < -0.01 ? `<span style="color:var(--red)">$${s.netBenefit.toFixed(2)}</span>` : ''}
+          </div>
+        </div>
+        <div class="station-price">
+          <div class="station-cpl ${priceClass}">${s.price.toFixed(1)}¢</div>
+        </div>
+        <button class="station-nav-btn" onclick="event.stopPropagation(); navigateTo(${s.lat}, ${s.lon})">Navigate</button>
+      </div>`;
+  }).join('');
+  
+  // Show top 3 always, expand for more
+  if (!isExpanded) {
+    body.style.maxHeight = '160px';
+    body.style.overflow = 'hidden';
+  } else {
+    body.style.maxHeight = '';
+    body.style.overflow = 'auto';
+  }
+}
+
+function focusStation(index) {
+  const s = rankedStations[index];
+  if (s) {
+    map.setView([s.lat, s.lon], 16);
+    // Find and open the marker's popup
+    markers.forEach(m => {
+      const ll = m.getLatLng();
+      if (Math.abs(ll.lat - s.lat) < 0.001 && Math.abs(ll.lng - s.lon) < 0.001) {
+        m.openPopup();
+      }
+    });
+  }
+}
+
+// ═══════════════════════════════════════════
+// GEOLOCATION
+// ═══════════════════════════════════════════
+function findMe() {
+  if (!navigator.geolocation) {
+    showToast('Geolocation not supported on this device');
+    return;
+  }
+  
+  document.getElementById('find-me-btn').disabled = true;
+  document.getElementById('find-me-btn').textContent = '📍 Locating...';
+  
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      document.getElementById('find-me-btn').disabled = false;
+      document.getElementById('find-me-btn').textContent = '📍 Find Me';
+      
+      if (isEnRoute) {
+        showToast('Enter a destination in the bar above');
+      } else {
+        runRank(lat, lon);
+      }
+    },
+    err => {
+      document.getElementById('find-me-btn').disabled = false;
+      document.getElementById('find-me-btn').textContent = '📍 Find Me';
+      showToast('Location access denied. Please enable location permissions.');
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+
+// ═══════════════════════════════════════════
+// EN ROUTE MODE
+// ═══════════════════════════════════════════
+async function goEnRoute() {
+  const input = document.getElementById('dest-input');
+  const dest = input.value.trim();
+  if (!dest) { showToast('Enter a destination'); return; }
+  if (!userLoc) { showToast('Tap "Find Me" first to set your location'); return; }
+  
+  showLoading(true);
+  
+  try {
+    // Geocode destination via Nominatim
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(dest + ', Brisbane QLD')}&limit=1`);
+    const data = await res.json();
+    if (data.length === 0) { showToast('Could not find that destination'); showLoading(false); return; }
+    
+    const destLat = parseFloat(data[0].lat);
+    const destLon = parseFloat(data[0].lon);
+    
+    // Get route to calculate stations along the way
+    const routeRes = await fetch(`${OSRM_BASE}/route/v1/driving/${userLoc.lon},${userLoc.lat};${destLon},${destLat}?overview=false`);
+    const routeData = await routeRes.json();
+    const routeDist = routeData.code === 'Ok' ? routeData.routes[0].distance : null; // metres
+    
+    // Run ranking from user's location instead of destination
+    // (stations that are "on the way" are those with minimal extra detour)
+    showLoading(false);
+    await runRank(userLoc.lat, userLoc.lon);
+    
+    // Show route distance info
+    if (routeDist) {
+      document.getElementById('panel-title').textContent = `Route: ${Math.round(routeDist/1000)} km — Top Picks`;
+    }
+  } catch (e) {
+    showToast('Error finding route: ' + e.message);
+    showLoading(false);
+  }
+}
+
+// ═══════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════
+function showLoading(show) {
+  const el = document.getElementById('loading');
+  el.classList.toggle('visible', show);
+}
+
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('visible');
+  setTimeout(() => el.classList.remove('visible'), 6000);
+}
+
+function hideToast() {
+  document.getElementById('toast').classList.remove('visible');
+}
+
+// ═══════════════════════════════════════════
+// EVENT BINDINGS
+// ═══════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  initMap();
+  
+  // Find Me button
+  document.getElementById('find-me-btn').onclick = findMe;
+  
+  // Mode toggle
+  document.getElementById('mode-toggle').onclick = () => {
+    isEnRoute = !isEnRoute;
+    const toggle = document.getElementById('mode-toggle');
+    const dest = document.getElementById('mode-dest');
+    
+    if (isEnRoute) {
+      toggle.textContent = '📍 En Route';
+      dest.classList.add('visible');
+      toggle.style.borderColor = 'var(--accent)';
+    } else {
+      toggle.textContent = '⛽ Closest';
+      dest.classList.remove('visible');
+      toggle.style.borderColor = 'var(--border)';
+    }
+  };
+  
+  // Go button (En Route)
+  document.getElementById('go-btn').onclick = goEnRoute;
+  document.getElementById('dest-input').onkeydown = (e) => {
+    if (e.key === 'Enter') goEnRoute();
+  };
+  
+  // Panel expand
+  document.getElementById('panel-toggle').onclick = () => {
+    isExpanded = !isExpanded;
+    const panel = document.getElementById('panel');
+    const toggle = document.getElementById('panel-toggle');
+    panel.classList.toggle('expanded', isExpanded);
+    toggle.textContent = isExpanded ? '▼' : '▲';
+    updatePanel();
+    setTimeout(() => map.invalidateSize(), 300);
+  };
+  
+  // Demo mode: load with some initial data
+  // Comment this out when QLD API is live — just wait for user to tap Find Me
+  // For now: auto-load with sample location (Brisbane CBD)
+  setTimeout(() => {
+    if (!userLoc) {
+      runRank(-27.505, 153.02);
+    }
+  }, 500);
+});
+</script>
+</body>
+</html>

@@ -23,16 +23,14 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); }
 
-/* ═══════════════════════════════════════════
-   LANDING SCREEN
-   ═══════════════════════════════════════════ */
+/* ═══════════════════════════════════════════ LANDING ════════════════════════ */
 #landing {
   position: absolute; inset: 0; z-index: 10;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   background: var(--bg); padding: 32px; gap: 20px;
-  transition: opacity 0.4s ease, transform 0.4s ease;
+  transition: opacity 0.3s ease;
 }
-#landing.hidden { opacity: 0; transform: scale(0.95); pointer-events: none; }
+#landing.hidden { opacity: 0; pointer-events: none; }
 #landing h1 { font-size: 24px; font-weight: 700; text-align: center; }
 #landing p { font-size: 14px; color: var(--text-dim); text-align: center; max-width: 280px; line-height: 1.5; }
 .landing-btn {
@@ -45,31 +43,31 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
 .landing-btn .icon { font-size: 28px; }
 .landing-btn .sub { font-size: 12px; color: var(--text-dim); font-weight: 400; margin-top: 2px; }
 
-/* En Route input on landing */
 #enroute-container { width: 100%; max-width: 320px; }
-#enroute-btn { transition: opacity 0.2s, transform 0.2s; }
+#enroute-btn { transition: opacity 0.15s; }
 #enroute-btn.hidden { display: none; }
 #landing-dest-wrap {
-  display: none; position: relative; width: 100%;
+  display: none; width: 100%;
   border: 1px solid var(--border); border-radius: var(--radius);
-  background: var(--surface); transition: all 0.2s;
+  background: var(--surface);
 }
-#landing-dest-wrap.visible { display: flex; align-items: center; }
+#landing-dest-wrap.visible { display: flex; align-items: stretch; }
 #landing-dest-wrap:focus-within { border-color: var(--accent); }
 #landing-dest-input {
-  flex: 1; background: transparent; border: none; padding: 20px 14px;
+  flex: 1; min-width: 0; background: transparent; border: none; padding: 20px 14px;
   color: var(--text); font-size: 17px; font-weight: 600; outline: none;
 }
 #landing-dest-input::placeholder { color: var(--text-dim); }
 #landing-dest-cancel {
   background: transparent; border: none; color: var(--text-dim);
-  padding: 8px 14px; font-size: 18px; cursor: pointer; line-height: 1;
+  width: 44px; font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 #landing-dest-cancel:hover { color: var(--text); }
 #landing-dest-submit {
   background: var(--accent); color: #000; border: none; border-radius: 6px;
-  margin: 10px 14px 10px 0; padding: 10px 16px;
-  font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap;
+  margin: 8px; padding: 0 18px; font-size: 15px; font-weight: 700; cursor: pointer;
+  flex-shrink: 0;
 }
 #landing-dest-submit:hover { opacity: 0.85; }
 #landing-ac-list {
@@ -79,26 +77,32 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
   max-height: 200px; overflow-y: auto; display: none;
 }
 #landing-ac-list.visible { display: block; }
-#landing-ac-list div {
-  padding: 10px 14px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--border);
-}
+#landing-ac-list div { padding: 10px 14px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--border); }
 #landing-ac-list div:hover { background: var(--card); }
 #landing-ac-list div:last-child { border-bottom: none; }
 #landing-ac-list .ac-sub { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
 
-/* ═══════════════════════════════════════════
-   MAP
-   ═══════════════════════════════════════════ */
-#map { position: absolute; top: 0; left: 0; right: 0; bottom: 260px; z-index: 1; display: none; }
+/* ═══════════════════════════════════════════ MAP ════════════════════════════ */
+#map {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 260px; z-index: 1;
+  display: none; background: var(--bg);
+}
 #map.visible { display: block; }
 #map .leaflet-control-zoom a { background: var(--surface); color: var(--text); border-color: var(--border); }
 #map .leaflet-control-zoom a:hover { background: var(--card); }
-#map .leaflet-control-attribution { color: var(--text-dim); background: transparent; }
-.leaflet-popup-content-wrapper { background: var(--card); color: var(--text); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+.leaflet-popup-content-wrapper { background: var(--card); color: var(--text); border-radius: var(--radius); border: 1px solid var(--border); }
 .leaflet-popup-tip { background: var(--card); border: 1px solid var(--border); }
-.leaflet-popup-close-button { color: var(--text-dim) !important; }
+.popup-content { min-width: 200px; }
+.popup-content h3 { font-size: 14px; margin-bottom: 4px; }
+.popup-content .addr { font-size: 11px; color: var(--text-dim); margin-bottom: 8px; }
+.popup-row { display: flex; justify-content: space-between; gap: 16px; font-size: 12px; padding: 2px 0; }
+.popup-row span:first-child { color: var(--text-dim); }
+.popup-nav {
+  width: 100%; margin-top: 10px; background: var(--accent); color: #000;
+  border: none; border-radius: 8px; padding: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.popup-nav:hover { opacity: 0.85; }
 
-/* Numbered marker */
 .number-marker {
   width: 28px; height: 28px; border-radius: 50%; border: 2px solid #fff;
   display: flex; align-items: center; justify-content: center;
@@ -108,11 +112,9 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
 .number-marker.top1 { background: #f59e0b; }
 .number-marker.top2 { background: #64748b; }
 .number-marker.top3 { background: #d97706; }
-.number-marker.other { background: #334155; width: 10px; height: 10px; font-size: 0; border-width: 2px; }
+.number-marker.other { display: none; }
 
-/* ═══════════════════════════════════════════
-   TOP BAR (Closest / En Route switcher + dest input)
-   ═══════════════════════════════════════════ */
+/* ═══════════════════════════════════════════ TOP BAR ════════════════════════ */
 #top-bar {
   display: none; position: absolute; top: 12px; left: 12px; right: 12px; z-index: 3;
   gap: 8px; align-items: center;
@@ -120,44 +122,36 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
 #top-bar.visible { display: flex; }
 #back-btn {
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 10px 14px; color: var(--text); font-size: 16px; cursor: pointer;
-  transition: background 0.15s; line-height: 1;
+  padding: 10px 14px; color: var(--text); font-size: 16px; cursor: pointer; line-height: 1;
 }
 #back-btn:hover { background: var(--card); }
 #mode-label {
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
   padding: 10px 16px; font-size: 13px; font-weight: 500; white-space: nowrap;
 }
-#dest-field {
-  flex: 1; display: none; position: relative;
-}
+#dest-field { flex: 1; display: none; position: relative; }
 #dest-field.visible { display: block; }
 #dest-field input {
   width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
   padding: 10px 42px 10px 14px; color: var(--text); font-size: 13px; outline: none;
 }
 #dest-field input:focus { border-color: var(--accent); }
-#dest-field input::placeholder { color: var(--text-dim); }
 #dest-go {
   position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
   background: var(--accent); color: #000; border: none; border-radius: 6px;
   padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer;
 }
-/* Autocomplete dropdown */
 #autocomplete-list {
   position: absolute; top: 100%; left: 0; right: 0; z-index: 20;
   background: var(--surface); border: 1px solid var(--border); border-radius: 0 0 var(--radius) var(--radius);
   max-height: 200px; overflow-y: auto; display: none;
 }
 #autocomplete-list.visible { display: block; }
-#autocomplete-list div {
-  padding: 10px 14px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--border);
-}
+#autocomplete-list div { padding: 10px 14px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--border); }
 #autocomplete-list div:hover { background: var(--card); }
-#autocomplete-list div:last-child { border-bottom: none; }
 #autocomplete-list .ac-sub { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
 
-/* Loading */
+/* ═══════════════════════════════════════════ LOADING / TOAST ═══════════════ */
 #loading {
   display: none; position: absolute; top: 60px; left: 50%; transform: translateX(-50%); z-index: 4;
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
@@ -166,8 +160,6 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
 #loading.visible { display: flex; align-items: center; gap: 8px; }
 .spinner { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
-
-/* Toast */
 #toast {
   display: none; position: absolute; bottom: 270px; left: 12px; right: 12px; z-index: 5;
   background: #7f1d1d; color: #fca5a5; border: 1px solid #991b1b; border-radius: var(--radius);
@@ -175,13 +167,11 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
 }
 #toast.visible { display: block; }
 
-/* ═══════════════════════════════════════════
-   BOTTOM PANEL
-   ═══════════════════════════════════════════ */
+/* ═══════════════════════════════════════════ PANEL ══════════════════════════ */
 #panel {
   display: none; position: absolute; bottom: 0; left: 0; right: 0; height: 260px; z-index: 2;
   background: var(--surface); border-top: 1px solid var(--border);
-  flex-direction: column; transition: height 0.3s ease;
+  flex-direction: column;
 }
 #panel.visible { display: flex; }
 #panel.expanded { height: 70vh; }
@@ -189,8 +179,8 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
   display: flex; align-items: center; justify-content: space-between;
   padding: 12px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0;
 }
-#panel-header h2 { font-size: 15px; font-weight: 600; }
-#panel-toggle { background: none; border: none; color: var(--text-dim); font-size: 18px; cursor: pointer; padding: 4px; }
+#panel-header h2 { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 8px; }
+#panel-toggle { background: none; border: none; color: var(--text-dim); font-size: 18px; cursor: pointer; padding: 4px; flex-shrink: 0; }
 #panel-toggle:hover { color: var(--text); }
 #panel-body { flex: 1; overflow-y: auto; padding: 8px 0; }
 
@@ -218,11 +208,10 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
 .station-cpl.good { color: var(--green); }
 .station-cpl.ok { color: var(--yellow); }
 .station-cpl.bad { color: var(--red); }
-.station-benefit { font-size: 11px; color: var(--green); }
 .station-nav-btn {
   background: var(--accent); color: #000; border: none; border-radius: 8px;
   padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer;
-  white-space: nowrap; flex-shrink: 0; transition: opacity 0.15s;
+  white-space: nowrap; flex-shrink: 0;
 }
 .station-nav-btn:hover { opacity: 0.85; }
 
@@ -269,7 +258,7 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
   </div>
 </div>
 
-<div id="loading" class="visible"><div class="spinner"></div><span>Finding stations...</span></div>
+<div id="loading"><div class="spinner"></div><span>Finding stations...</span></div>
 <div id="toast"></div>
 <div id="map"></div>
 
@@ -282,55 +271,48 @@ html, body { height: 100%; overflow: hidden; font-family: -apple-system, BlinkMa
 </div>
 
 <script>
-// ═══════════════════════════════════════════
-// CONFIG
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════ CONFIG ═════════════════════════
 const VEHICLE = { tankL: 60, consumption: 0.086, detourCostPerKm: 5 };
 const OSRM_BASE = 'https://router.project-osrm.org';
 const OSRM_TIMEOUT = 8000;
 
-// Mock stations — real addresses, approximate coords for demo
+// Mock stations — accurate coordinates from OSM geocoding
 const MOCK_STATIONS = [
-  { name: '7-Eleven Fairfield', address: '601 Ipswich Rd, Fairfield QLD 4103', lat: -27.5061, lon: 153.0178, price: 159.9 },
-  { name: 'BP Moorooka', address: 'Ipswich Rd & Koopman St, Moorooka QLD 4105', lat: -27.5119, lon: 153.0150, price: 161.5 },
-  { name: 'Caltex Annerley', address: '433 Ipswich Rd, Annerley QLD 4103', lat: -27.5036, lon: 153.0208, price: 158.9 },
-  { name: 'Shell Yeronga', address: '504 Ipswich Rd, Yeronga QLD 4104', lat: -27.5083, lon: 153.0133, price: 160.3 },
-  { name: 'United Greenslopes', address: '871 Logan Rd, Greenslopes QLD 4120', lat: -27.5088, lon: 153.0500, price: 157.9 },
-  { name: '7-Eleven Woolloongabba', address: '186 Logan Rd, Woolloongabba QLD 4102', lat: -27.4884, lon: 153.0368, price: 158.5 },
-  { name: 'BP Coorparoo', address: '210 Old Cleveland Rd, Coorparoo QLD 4151', lat: -27.4938, lon: 153.0564, price: 162.9 },
-  { name: 'Caltex Stones Corner', address: '618 Logan Rd, Stones Corner QLD 4120', lat: -27.4989, lon: 153.0431, price: 159.5 },
-  { name: 'Ampol Eight Mile Plains', address: '2599 Logan Rd, Eight Mile Plains QLD 4113', lat: -27.5778, lon: 153.0875, price: 156.9 },
-  { name: 'Shell Indooroopilly', address: '257 Moggill Rd, Indooroopilly QLD 4068', lat: -27.5008, lon: 152.9828, price: 160.9 },
-  { name: '7-Eleven Toowong', address: '127 Sherwood Rd, Toowong QLD 4066', lat: -27.4850, lon: 152.9903, price: 158.3 },
-  { name: 'Puma Milton', address: '51 Milton Rd, Milton QLD 4064', lat: -27.4714, lon: 153.0028, price: 161.9 },
-  { name: 'BP South Brisbane', address: '42 Melbourne St, South Brisbane QLD 4101', lat: -27.4769, lon: 153.0125, price: 163.5 },
-  { name: 'Caltex West End', address: '92 Boundary St, West End QLD 4101', lat: -27.4772, lon: 153.0075, price: 160.7 },
-  { name: 'United Mt Gravatt', address: '1982 Logan Rd, Mt Gravatt QLD 4122', lat: -27.5364, lon: 153.0853, price: 157.5 },
+  { name: 'Caltex Annerley', address: '433 Ipswich Rd, Annerley QLD 4103', lat: -27.50385, lon: 153.03435, price: 158.9 },
+  { name: '7-Eleven Woolloongabba', address: '186 Logan Rd, Woolloongabba QLD 4102', lat: -27.49223, lon: 153.04100, price: 158.5 },
+  { name: 'United Greenslopes', address: '871 Logan Rd, Greenslopes QLD 4120', lat: -27.51252, lon: 153.05337, price: 157.9 },
+  { name: 'BP Coorparoo', address: '210 Old Cleveland Rd, Coorparoo QLD 4151', lat: -27.49705, lon: 153.05452, price: 162.9 },
+  { name: 'Caltex Stones Corner', address: '618 Logan Rd, Stones Corner QLD 4120', lat: -27.49848, lon: 153.04394, price: 159.5 },
+  { name: 'Ampol Eight Mile Plains', address: '2599 Logan Rd, Eight Mile Plains QLD 4113', lat: -27.57655, lon: 153.09276, price: 156.9 },
+  { name: 'Shell Indooroopilly', address: '257 Moggill Rd, Indooroopilly QLD 4068', lat: -27.49504, lon: 152.97555, price: 160.9 },
+  { name: '7-Eleven Toowong', address: '127 Sherwood Rd, Toowong QLD 4066', lat: -27.48536, lon: 152.99065, price: 158.3 },
+  { name: 'Puma Milton', address: '51 Milton Rd, Milton QLD 4064', lat: -27.46898, lon: 153.00423, price: 161.9 },
+  { name: 'BP South Brisbane', address: '42 Melbourne St, South Brisbane QLD 4101', lat: -27.47453, lon: 153.01730, price: 163.5 },
+  { name: 'Caltex West End', address: '92 Boundary St, West End QLD 4101', lat: -27.48396, lon: 153.01149, price: 160.7 },
+  { name: 'United Mt Gravatt', address: '1982 Logan Rd, Mt Gravatt QLD 4122', lat: -27.53336, lon: 153.07487, price: 157.5 },
+  { name: '7-Eleven Fairfield', address: '601 Ipswich Rd, Fairfield QLD 4103', lat: -27.5058, lon: 153.0183, price: 159.9 },
+  { name: 'BP Moorooka', address: 'Ipswich Rd & Koopman St, Moorooka QLD 4105', lat: -27.5120, lon: 153.0155, price: 161.5 },
+  { name: 'Shell Yeronga', address: '504 Ipswich Rd, Yeronga QLD 4104', lat: -27.5090, lon: 153.0135, price: 160.3 },
 ];
 
-// ═══════════════════════════════════════════
-// STATE
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════ STATE ═══════════════════════════
 let userLoc = null;
 let stations = [];
 let rankedStations = [];
-let currentMode = null; // 'closest' | 'enroute'
+let currentMode = null;
 let isExpanded = false;
 let map = null;
 let markers = [];
 let autocompleteTimer = null;
 
-// ═══════════════════════════════════════════
-// LANDING SCREEN
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════ LANDING ═════════════════════════
 function startClosest() {
   currentMode = 'closest';
   document.getElementById('landing').classList.add('hidden');
   document.getElementById('top-bar').classList.add('visible');
-  document.getElementById('map').classList.add('visible');
-  document.getElementById('panel').classList.add('visible');
   document.getElementById('mode-label').textContent = '📍 Closest';
   document.getElementById('dest-field').classList.remove('visible');
+  showMapContent();
   findMe();
 }
 
@@ -347,18 +329,10 @@ function hideEnrouteInput() {
   document.getElementById('landing-ac-list').classList.remove('visible');
 }
 
-function showMapView() {
-  document.getElementById('landing').classList.add('hidden');
-  document.getElementById('top-bar').classList.add('visible');
+function showMapContent() {
   document.getElementById('map').classList.add('visible');
   document.getElementById('panel').classList.add('visible');
-  if (currentMode === 'enroute') {
-    document.getElementById('mode-label').textContent = '🛣️ En Route';
-    document.getElementById('dest-field').classList.add('visible');
-  } else {
-    document.getElementById('mode-label').textContent = '📍 Closest';
-    document.getElementById('dest-field').classList.remove('visible');
-  }
+  if (map) setTimeout(() => map.invalidateSize(), 100);
 }
 
 function backToLanding() {
@@ -370,109 +344,92 @@ function backToLanding() {
   document.getElementById('autocomplete-list').classList.remove('visible');
   currentMode = null;
   hideEnrouteInput();
-  // Clear map
-  markers.forEach(m => map.removeLayer(m));
-  markers = [];
+  if (markers.length) { markers.forEach(m => map.removeLayer(m)); markers = []; }
 }
 
-// ═══════════════════════════════════════════
-// MAP
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════ MAP ═════════════════════════════
 function initMap() {
-  map = L.map('map', {
-    zoomControl: true,
-    attributionControl: true
-  }).setView([-27.505, 153.02], 12);
-
+  map = L.map('map', { zoomControl: true, attributionControl: true }).setView([-27.47, 153.04], 13);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '© OpenStreetMap'
   }).addTo(map);
+  // Force size recalculation since map starts hidden
+  setTimeout(() => map.invalidateSize(), 200);
 }
 
 function updateMap() {
   markers.forEach(m => map.removeLayer(m));
   markers = [];
-
   if (!userLoc) return;
 
-  // User marker — blue dot
-  const userMarker = L.circleMarker([userLoc.lat, userLoc.lon], {
+  // User marker
+  const userM = L.circleMarker([userLoc.lat, userLoc.lon], {
     radius: 8, color: '#60a5fa', fillColor: '#60a5fa', fillOpacity: 0.3, weight: 2
   }).addTo(map);
-  userMarker.bindPopup('📍 You are here');
-  markers.push(userMarker);
+  userM.bindPopup('📍 You are here');
+  markers.push(userM);
 
-  // Station markers with numbers
+  // Station markers
   rankedStations.forEach((s, i) => {
-    let cls = 'other';
-    let size = 10;
-    if (i === 0) { cls = 'top1'; size = 28; }
-    else if (i === 1) { cls = 'top2'; size = 24; }
-    else if (i === 2) { cls = 'top3'; size = 24; }
-    else { size = 10; }
+    let cls = 'other', sz = 10;
+    if (i === 0) { cls = 'top1'; sz = 28; }
+    else if (i === 1) { cls = 'top2'; sz = 24; }
+    else if (i === 2) { cls = 'top3'; sz = 24; }
 
     const icon = L.divIcon({
       className: '',
       html: `<div class="number-marker ${cls}">${i < 3 ? i + 1 : ''}</div>`,
-      iconSize: [size, size],
-      iconAnchor: [size / 2, size / 2]
+      iconSize: [sz, sz], iconAnchor: [sz / 2, sz / 2]
     });
 
     const marker = L.marker([s.lat, s.lon], { icon }).addTo(map);
-
     const priceColor = s.netBenefit > 2 ? '#34d399' : s.netBenefit > 0 ? '#fbbf24' : '#f87171';
 
-    const popupHtml = `
+    marker.bindPopup(`
       <div class="popup-content">
-        <h3>#${i + 1} ${s.name}</h3>
+        <h3>${i + 1}. ${s.name}</h3>
         <div class="addr">${s.address}</div>
-        <div class="popup-row"><span>Price</span><span>${s.price.toFixed(1)}¢/L</span></div>
+        <div class="popup-row"><span>Price</span><span>${s.price.toFixed(1)}c/L</span></div>
         <div class="popup-row"><span>Driving distance</span><span>${s.driveKm} km</span></div>
         ${s.extraKm > 0.1 ? `<div class="popup-row"><span>Extra vs baseline</span><span>${s.extraKm} km</span></div>` : ''}
         <div class="popup-row"><span>Net benefit</span><span style="color:${priceColor}">${s.netBenefit > 0 ? '+' : ''}$${s.netBenefit.toFixed(2)}</span></div>
         <div class="popup-row"><span>Fill cost</span><span>$${s.fillCost.toFixed(2)}</span></div>
-        <button class="popup-nav" onclick="navigateTo('${s.address.replace(/'/g, "\\'")}', ${s.lat}, ${s.lon})">Navigate →</button>
-      </div>`;
-
-    marker.bindPopup(popupHtml);
+        <button class="popup-nav" onclick="navigateTo('${s.address.replace(/'/g, "\\'")}', ${s.lat}, ${s.lon})">Navigate -></button>
+      </div>`);
     markers.push(marker);
   });
 
-  // Zoom to show user + top 3
+  // Zoom to user + top 3
   const pts = [userLoc];
   rankedStations.slice(0, 3).forEach(s => pts.push(s));
   const bounds = L.latLngBounds(pts.map(p => [p.lat, p.lon]));
   map.fitBounds(bounds, { padding: [80, 160], maxZoom: 15 });
 }
 
-function navigateTo(address, lat, lon) {
-  // Use address string first so Google geocodes it properly
-  // Fall back to coordinates if address is wonky
-  const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}&travelmode=driving`;
+function navigateTo(address) {
+  const url = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(address) + '&travelmode=driving';
   window.open(url, '_blank');
 }
 
-// ═══════════════════════════════════════════
-// OSRM ROUTING
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════ OSRM ════════════════════════════
 async function getDrivingDistances(origin, destinations) {
   if (destinations.length === 0) return [];
-  const coords = `${origin.lon},${origin.lat};` + destinations.map(s => `${s.lon},${s.lat}`).join(';');
-  const url = `${OSRM_BASE}/table/v1/driving/${coords}?sources=0&annotations=distance`;
+  const coords = origin.lon + ',' + origin.lat + ';' + destinations.map(s => s.lon + ',' + s.lat).join(';');
+  const url = OSRM_BASE + '/table/v1/driving/' + coords + '?sources=0&annotations=distance';
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), OSRM_TIMEOUT);
+    const id = setTimeout(() => controller.abort(), OSRM_TIMEOUT);
     const res = await fetch(url, { signal: controller.signal });
-    clearTimeout(timeoutId);
-    if (!res.ok) throw new Error(`OSRM ${res.status}`);
+    clearTimeout(id);
+    if (!res.ok) throw new Error('OSRM ' + res.status);
     const data = await res.json();
-    if (data.code !== 'Ok' || !data.distances) throw new Error('OSRM bad response');
+    if (data.code !== 'Ok' || !data.distances) throw new Error('bad response');
     const dists = data.distances[0];
     return destinations.map((s, i) => dists[i + 1] ? Math.round(dists[i + 1]) : null);
   } catch (e) {
-    console.warn('OSRM failed, using haversine:', e.message);
+    console.warn('OSRM fallback:', e.message);
     return destinations.map(s => Math.round(haversine(origin, s) * 1000));
   }
 }
@@ -487,43 +444,28 @@ function haversine(a, b) {
   return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
 }
 
-// ═══════════════════════════════════════════
-// NET BENEFIT
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════ NET BENEFIT ═════════════════════
 function calcNetBenefit(stationsWithDist) {
-  if (stationsWithDist.length === 0) return [];
+  if (!stationsWithDist.length) return [];
   const sorted = [...stationsWithDist].sort((a, b) => a.driveM - b.driveM);
-  const baseline = sorted[0];
-  const baselineCpl = (baseline.price || 159.9) / 100;
+  const base = sorted[0];
+  const baseCpl = (base.price || 159.9) / 100;
 
   return stationsWithDist.map(s => {
     const distKm = s.driveM / 1000;
-    const baselineKm = baseline.driveM / 1000;
-    const extraKm = distKm - baselineKm;
+    const extraKm = distKm - (base.driveM / 1000);
     const cpl = (s.price || 159.9) / 100;
-
-    const fillSaving = (baselineCpl - cpl) * VEHICLE.tankL;
-    const detourCost = extraKm * VEHICLE.detourCostPerKm;
-    const fuelCost = extraKm * VEHICLE.consumption * cpl;
-    const benefit = fillSaving - detourCost - fuelCost;
-    const fillCost = cpl * VEHICLE.tankL;
-
+    const fillSaving = (baseCpl - cpl) * VEHICLE.tankL;
+    const benefit = fillSaving - (extraKm * VEHICLE.detourCostPerKm) - (extraKm * VEHICLE.consumption * cpl);
     return {
-      ...s,
-      driveKm: Math.round(distKm * 10) / 10,
-      extraKm: Math.round(extraKm * 10) / 10,
-      netBenefit: Math.round(benefit * 100) / 100,
-      fillCost: Math.round(fillCost * 100) / 100,
-      isBaseline: s === baseline
+      ...s, driveKm: Math.round(distKm * 10) / 10, extraKm: Math.round(extraKm * 10) / 10,
+      netBenefit: Math.round(benefit * 100) / 100, fillCost: Math.round(cpl * VEHICLE.tankL * 100) / 100
     };
   }).sort((a, b) => b.netBenefit - a.netBenefit);
 }
 
-// ═══════════════════════════════════════════
-// FETCH STATIONS
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════ STATIONS ════════════════════════
 async function fetchStations(lat, lon) {
-  // TODO: swap with QLD API when key arrives
   const userPt = { lat, lon };
   return MOCK_STATIONS
     .map(s => ({ ...s, dist: haversine(userPt, s) }))
@@ -531,22 +473,14 @@ async function fetchStations(lat, lon) {
     .sort((a, b) => a.dist - b.dist);
 }
 
-// ═══════════════════════════════════════════
-// CORE RANK FLOW
-// ═══════════════════════════════════════════
 async function runRank(lat, lon) {
   showLoading(true);
   hideToast();
-
   userLoc = { lat, lon };
 
   try {
     stations = await fetchStations(lat, lon);
-    if (stations.length === 0) {
-      showToast('No fuel stations found nearby');
-      showLoading(false);
-      return;
-    }
+    if (!stations.length) { showToast('No fuel stations found nearby'); showLoading(false); return; }
 
     const pts = stations.map(s => ({ lat: s.lat, lon: s.lon }));
     const distances = await getDrivingDistances({ lat, lon }, pts);
@@ -555,132 +489,65 @@ async function runRank(lat, lon) {
     rankedStations = calcNetBenefit(stations);
     updateMap();
     updatePanel();
-  } catch (e) {
-    showToast('Error: ' + e.message);
-  }
-
+  } catch (e) { showToast('Error: ' + e.message); }
   showLoading(false);
 }
 
-// ═══════════════════════════════════════════
-// PANEL
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════ PANEL ═══════════════════════════
 function updatePanel() {
   const body = document.getElementById('panel-body');
   const title = document.getElementById('panel-title');
 
-  if (rankedStations.length === 0) {
-    body.innerHTML = '<div style="padding: 20px; text-align: center; color: var(--text-dim)">Searching for stations...</div>';
+  if (!rankedStations.length) {
+    body.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-dim)">Searching for stations...</div>';
     return;
   }
 
   const best = rankedStations[0];
-  title.textContent = `#1 ${best.name} — $${best.fillCost.toFixed(2)}`;
+  title.textContent = '#1 ' + best.name + ' - $' + best.fillCost.toFixed(2);
 
   body.innerHTML = rankedStations.map((s, i) => {
     const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : 'rank-3';
     const priceClass = s.netBenefit > 2 ? 'good' : s.netBenefit > 0 ? 'ok' : 'bad';
-
-    return `
-      <div class="station-card" onclick="focusStation(${i})">
-        <div class="station-rank ${rankClass}">${i + 1}</div>
-        <div class="station-info">
-          <div class="station-name">${s.name}</div>
-          <div class="station-address">${s.address}</div>
-          <div class="station-meta">
-            <span>🚗 ${s.driveKm} km${s.extraKm > 0.1 ? ` (+${s.extraKm})` : ''}</span>
-            <span>⛽ $${s.fillCost.toFixed(2)}</span>
-            ${s.netBenefit > 0.01 ? `<span style="color:var(--green)">+$${s.netBenefit.toFixed(2)}</span>` : s.netBenefit < -0.01 ? `<span style="color:var(--red)">$${s.netBenefit.toFixed(2)}</span>` : ''}
-          </div>
-        </div>
-        <div class="station-price">
-          <div class="station-cpl ${priceClass}">${s.price.toFixed(1)}¢</div>
-        </div>
-        <button class="station-nav-btn" onclick="event.stopPropagation(); navigateTo('${s.address.replace(/'/g, "\\'")}', ${s.lat}, ${s.lon})">Navigate</button>
-      </div>`;
+    return '<div class="station-card" onclick="focusStation(' + i + ')">'
+      + '<div class="station-rank ' + rankClass + '">' + (i + 1) + '</div>'
+      + '<div class="station-info">'
+      + '<div class="station-name">' + s.name + '</div>'
+      + '<div class="station-address">' + s.address + '</div>'
+      + '<div class="station-meta">'
+      + '<span>' + s.driveKm + ' km' + (s.extraKm > 0.1 ? ' (+' + s.extraKm + ')' : '') + '</span>'
+      + '<span>$' + s.fillCost.toFixed(2) + '</span>'
+      + (s.netBenefit > 0.01 ? '<span style="color:var(--green)">+$' + s.netBenefit.toFixed(2) + '</span>' : '')
+      + '</div></div>'
+      + '<div class="station-price"><div class="station-cpl ' + priceClass + '">' + s.price.toFixed(1) + 'c</div></div>'
+      + '<button class="station-nav-btn" onclick="event.stopPropagation();navigateTo(\'' + s.address.replace(/'/g, "\\'") + '\')">Navigate</button>'
+      + '</div>';
   }).join('');
-
-  if (!isExpanded) {
-    body.style.maxHeight = '160px';
-    body.style.overflow = 'hidden';
-  } else {
-    body.style.maxHeight = '';
-    body.style.overflow = 'auto';
-  }
 }
 
 function focusStation(index) {
   const s = rankedStations[index];
   if (s) {
     map.setView([s.lat, s.lon], 16);
-    // Open popup
     markers.forEach(m => {
       const ll = m.getLatLng();
-      if (Math.abs(ll.lat - s.lat) < 0.001 && Math.abs(ll.lng - s.lon) < 0.001) {
-        m.openPopup();
-      }
+      if (Math.abs(ll.lat - s.lat) < 0.001 && Math.abs(ll.lng - s.lon) < 0.001) m.openPopup();
     });
   }
 }
 
-// ═══════════════════════════════════════════
-// GEOLOCATION
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════ GEOLOCATION ═════════════════════
 function findMe() {
-  if (!navigator.geolocation) {
-    showToast('Geolocation not supported on this device');
-    return;
-  }
-
+  if (!navigator.geolocation) { showToast('Geolocation not available'); return; }
   showLoading(true);
-
   navigator.geolocation.getCurrentPosition(
-    pos => {
-      const lat = pos.coords.latitude;
-      const lon = pos.coords.longitude;
-      runRank(lat, lon);
-    },
-    err => {
-      showLoading(false);
-      showToast('Location access denied. Please enable location permissions.');
-    },
+    pos => runRank(pos.coords.latitude, pos.coords.longitude),
+    err => { showLoading(false); showToast('Location access denied. Please enable location permissions.'); },
     { enableHighAccuracy: true, timeout: 10000 }
   );
 }
 
-// ═══════════════════════════════════════════
-// EN ROUTE
-// ═══════════════════════════════════════════
-async function goEnRoute() {
-  const input = document.getElementById('dest-input');
-  const dest = input.value.trim();
-  if (!dest) { showToast('Enter a destination'); return; }
-  if (!userLoc) { showToast('Please allow location access first'); return; }
-
-  showLoading(true);
-  document.getElementById('autocomplete-list').classList.remove('visible');
-
-  try {
-    // Geocode via Nominatim
-    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(dest + ', Brisbane QLD')}&limit=1`);
-    const data = await res.json();
-    if (data.length === 0) { showToast('Could not find that destination'); showLoading(false); return; }
-
-    const destLat = parseFloat(data[0].lat);
-    const destLon = parseFloat(data[0].lon);
-
-    // Run ranking from user's location
-    // TODO: Proper en-route filtering — for v1, just rank at user location
-    // and show route distance
-    await runRank(userLoc.lat, userLoc.lon);
-
-    document.getElementById('panel-title').textContent = `🛣️ ${data[0].display_name.split(',')[0]} — Top Picks`;
-  } catch (e) {
-    showToast('Error: ' + e.message);
-    showLoading(false);
-  }
-}
-
+// ═══════════════════════════════════════════ EN ROUTE ════════════════════════
 async function submitEnroute() {
   const input = document.getElementById('landing-dest-input');
   const dest = input.value.trim();
@@ -690,156 +557,125 @@ async function submitEnroute() {
   showLoading(true);
 
   try {
-    // Geocode via Nominatim
-    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(dest + ', Brisbane QLD')}&limit=1`);
+    const res = await fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(dest + ', Brisbane QLD') + '&limit=1');
     const data = await res.json();
-    if (data.length === 0) { showToast('Could not find that destination'); showLoading(false); return; }
+    if (!data.length) { showToast('Could not find that destination'); showLoading(false); return; }
 
-    // Store destination geocode result on window
-    window._enrouteDest = { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
     window._enrouteName = data[0].display_name.split(',')[0];
 
-    // Show the map view
-    showMapView();
+    document.getElementById('landing').classList.add('hidden');
+    document.getElementById('top-bar').classList.add('visible');
+    document.getElementById('mode-label').textContent = '🛣\uFE0F En Route';
+    document.getElementById('dest-field').classList.add('visible');
     document.getElementById('dest-input').value = input.value;
+    showMapContent();
 
-    // Now get location and run ranking
-    if (!navigator.geolocation) {
-      showToast('Geolocation not supported');
-      showLoading(false);
-      return;
-    }
+    if (!navigator.geolocation) { showToast('Geolocation not supported'); showLoading(false); return; }
     navigator.geolocation.getCurrentPosition(
       pos => {
         userLoc = { lat: pos.coords.latitude, lon: pos.coords.longitude };
-        runRank(userLoc.lat, userLoc.lon).then(() => {
-          const name = window._enrouteName || dest;
-          document.getElementById('panel-title').textContent = `🛣️ ${name} — Top Picks`;
+        runRank(pos.coords.latitude, pos.coords.longitude).then(() => {
+          document.getElementById('panel-title').textContent = '🛣\uFE0F ' + (window._enrouteName || dest) + ' - Top Picks';
         });
       },
-      err => {
-        showLoading(false);
-        showToast('Location access denied');
-      },
+      err => { showLoading(false); showToast('Location access denied'); },
       { enableHighAccuracy: true, timeout: 10000 }
     );
-  } catch (e) {
-    showToast('Error: ' + e.message);
-    showLoading(false);
-  }
+  } catch (e) { showToast('Error: ' + e.message); showLoading(false); }
 }
 
-// ═══════════════════════════════════════════
-// AUTOCOMPLETE (Nominatim)
-// ═══════════════════════════════════════════
+async function goEnRoute() {
+  const input = document.getElementById('dest-input');
+  const dest = input.value.trim();
+  if (!dest) { showToast('Enter a destination'); return; }
+  if (!userLoc) { showToast('Please allow location access first'); return; }
+  showLoading(true);
+  document.getElementById('autocomplete-list').classList.remove('visible');
+
+  try {
+    const res = await fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(dest + ', Brisbane QLD') + '&limit=1');
+    const data = await res.json();
+    if (!data.length) { showToast('Could not find that destination'); showLoading(false); return; }
+    await runRank(userLoc.lat, userLoc.lon);
+    document.getElementById('panel-title').textContent = '🛣\uFE0F ' + data[0].display_name.split(',')[0] + ' - Top Picks';
+  } catch (e) { showToast('Error: ' + e.message); }
+  showLoading(false);
+}
+
+// ═══════════════════════════════════════════ AUTOCOMPLETE ════════════════════
 document.getElementById('dest-input').addEventListener('input', function() {
   clearTimeout(autocompleteTimer);
   const val = this.value.trim();
-  if (val.length < 3) {
-    document.getElementById('autocomplete-list').classList.remove('visible');
-    return;
-  }
-
+  if (val.length < 3) { document.getElementById('autocomplete-list').classList.remove('visible'); return; }
   autocompleteTimer = setTimeout(async () => {
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val + ', Brisbane')}&limit=5&addressdetails=1`);
+      const res = await fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(val + ', Brisbane') + '&limit=5&addressdetails=1');
       const data = await res.json();
       const list = document.getElementById('autocomplete-list');
-      if (data.length === 0) { list.classList.remove('visible'); return; }
-
+      if (!data.length) { list.classList.remove('visible'); return; }
       list.innerHTML = data.map(p => {
         const name = p.display_name.split(',')[0];
-        const suburb = p.address ? (p.address.suburb || p.address.town || p.address.city || p.address.municipality || '') : '';
-        return `<div onclick="selectAutocomplete('${p.display_name.replace(/'/g, "\\'")}', ${p.lat}, ${p.lon})">
-          <div>${name}</div>
-          <div class="ac-sub">${suburb} · ${Math.round(p.dist || 0)} km</div>
-        </div>`;
-      }).join('');
-      list.classList.add('visible');
-    } catch (e) {
-      // Silently fail
-    }
-  }, 300);
-});
-
-function selectAutocomplete(fullName, lat, lon) {
-  document.getElementById('dest-input').value = fullName.split(',')[0];
-  document.getElementById('autocomplete-list').classList.remove('visible');
-  window._geocodedDest = { lat, lon };
-}
-
-// Landing autocomplete
-document.getElementById('landing-dest-input').addEventListener('input', function() {
-  clearTimeout(autocompleteTimer);
-  const val = this.value.trim();
-  if (val.length < 3) {
-    document.getElementById('landing-ac-list').classList.remove('visible');
-    return;
-  }
-
-  autocompleteTimer = setTimeout(async () => {
-    try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val + ', Brisbane')}&limit=5&addressdetails=1`);
-      const data = await res.json();
-      const list = document.getElementById('landing-ac-list');
-      if (data.length === 0) { list.classList.remove('visible'); return; }
-
-      list.innerHTML = data.map(p => {
-        const name = p.display_name.split(',')[0];
-        const suburb = p.address ? (p.address.suburb || p.address.town || p.address.city || p.address.municipality || '') : '';
-        return `<div onclick="document.getElementById('landing-dest-input').value='${name.replace(/'/g, "\\'")}'; document.getElementById('landing-ac-list').classList.remove('visible');">
-          <div>${name}</div>
-          <div class="ac-sub">${suburb}</div>
-        </div>`;
+        const sub = p.address ? (p.address.suburb || p.address.town || p.address.city || '') : '';
+        return '<div onclick="document.getElementById(\'dest-input\').value=\'' + name.replace(/'/g, "\\'") + '\';document.getElementById(\'autocomplete-list\').classList.remove(\'visible\');">'
+          + '<div>' + name + '</div>'
+          + (sub ? '<div class="ac-sub">' + sub + '</div>' : '')
+          + '</div>';
       }).join('');
       list.classList.add('visible');
     } catch (e) {}
   }, 300);
 });
 
-// ═══════════════════════════════════════════
-// UI HELPERS
-// ═══════════════════════════════════════════
-function showLoading(show) {
-  document.getElementById('loading').classList.toggle('visible', show);
-}
+document.getElementById('landing-dest-input').addEventListener('input', function() {
+  clearTimeout(autocompleteTimer);
+  const val = this.value.trim();
+  if (val.length < 3) { document.getElementById('landing-ac-list').classList.remove('visible'); return; }
+  autocompleteTimer = setTimeout(async () => {
+    try {
+      const res = await fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(val + ', Brisbane') + '&limit=5&addressdetails=1');
+      const data = await res.json();
+      const list = document.getElementById('landing-ac-list');
+      if (!data.length) { list.classList.remove('visible'); return; }
+      list.innerHTML = data.map(p => {
+        const name = p.display_name.split(',')[0];
+        const sub = p.address ? (p.address.suburb || p.address.town || p.address.city || '') : '';
+        return '<div onclick="document.getElementById(\'landing-dest-input\').value=\'' + name.replace(/'/g, "\\'") + '\';document.getElementById(\'landing-ac-list\').classList.remove(\'visible\');">'
+          + '<div>' + name + '</div>'
+          + (sub ? '<div class="ac-sub">' + sub + '</div>' : '')
+          + '</div>';
+      }).join('');
+      list.classList.add('visible');
+    } catch (e) {}
+  }, 300);
+});
 
+// ═══════════════════════════════════════════ UI HELPERS ═══════════════════════
+function showLoading(show) { document.getElementById('loading').classList.toggle('visible', show); }
 function showToast(msg) {
   const el = document.getElementById('toast');
   el.textContent = msg;
   el.classList.add('visible');
   setTimeout(() => el.classList.remove('visible'), 6000);
 }
+function hideToast() { document.getElementById('toast').classList.remove('visible'); }
 
-function hideToast() {
-  document.getElementById('toast').classList.remove('visible');
-}
-
-// ═══════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════ INIT ════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
   initMap();
 
-  // Panel expand
   document.getElementById('panel-toggle').onclick = () => {
     isExpanded = !isExpanded;
-    const panel = document.getElementById('panel');
-    panel.classList.toggle('expanded', isExpanded);
+    document.getElementById('panel').classList.toggle('expanded', isExpanded);
     document.getElementById('panel-toggle').textContent = isExpanded ? '▼' : '▲';
-    updatePanel();
     setTimeout(() => map.invalidateSize(), 300);
   };
 
-  // Dest input Enter
   document.getElementById('dest-input').onkeydown = (e) => {
     if (e.key === 'Enter') {
       document.getElementById('autocomplete-list').classList.remove('visible');
       goEnRoute();
     }
   };
-
-  // Landing dest input Enter
   document.getElementById('landing-dest-input').onkeydown = (e) => {
     if (e.key === 'Enter') {
       document.getElementById('landing-ac-list').classList.remove('visible');

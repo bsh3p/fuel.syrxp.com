@@ -196,7 +196,7 @@ button, .clickable { min-height: 44px; }
       <div id="landing-ac-list"></div>
     </div>
   </div>
-  <p style="font-size:11px;color:var(--text-dim);margin-top:8px;max-width:260px">Mock data until QLD API key arrives.</p>
+  <p style="font-size:11px;color:var(--text-dim);margin-top:8px;max-width:260px">Real-time QLD fuel price data.</p>
 </div>
 
 <!-- SETTINGS OVERLAY / DRAWER -->
@@ -366,23 +366,14 @@ const VEHICLE = { tankL: 60, consumption: 0.086, detourCostPerKm: 5 };
 const OSRM_BASE = 'https://router.project-osrm.org';
 const OSRM_TIMEOUT = 8000;
 
-const MOCK_STATIONS = [
-  { name: 'Caltex Annerley', address: '433 Ipswich Rd, Annerley QLD 4103', lat: -27.50385, lon: 153.03435, price: 158.9 },
-  { name: '7-Eleven Woolloongabba', address: '186 Logan Rd, Woolloongabba QLD 4102', lat: -27.49223, lon: 153.04100, price: 158.5 },
-  { name: 'United Greenslopes', address: '871 Logan Rd, Greenslopes QLD 4120', lat: -27.51252, lon: 153.05337, price: 157.9 },
-  { name: 'BP Coorparoo', address: '210 Old Cleveland Rd, Coorparoo QLD 4151', lat: -27.49705, lon: 153.05452, price: 162.9 },
-  { name: 'Caltex Stones Corner', address: '618 Logan Rd, Stones Corner QLD 4120', lat: -27.49848, lon: 153.04394, price: 159.5 },
-  { name: 'Ampol Eight Mile Plains', address: '2599 Logan Rd, Eight Mile Plains QLD 4113', lat: -27.57655, lon: 153.09276, price: 156.9 },
-  { name: 'Shell Indooroopilly', address: '257 Moggill Rd, Indooroopilly QLD 4068', lat: -27.49504, lon: 152.97555, price: 160.9 },
-  { name: '7-Eleven Toowong', address: '127 Sherwood Rd, Toowong QLD 4066', lat: -27.48536, lon: 152.99065, price: 158.3 },
-  { name: 'Puma Milton', address: '51 Milton Rd, Milton QLD 4064', lat: -27.46898, lon: 153.00423, price: 161.9 },
-  { name: 'BP South Brisbane', address: '42 Melbourne St, South Brisbane QLD 4101', lat: -27.47453, lon: 153.01730, price: 163.5 },
-  { name: 'Caltex West End', address: '92 Boundary St, West End QLD 4101', lat: -27.48396, lon: 153.01149, price: 160.7 },
-  { name: 'United Mt Gravatt', address: '1982 Logan Rd, Mt Gravatt QLD 4122', lat: -27.53336, lon: 153.07487, price: 157.5 },
-  { name: '7-Eleven Fairfield', address: '180 Fairfield Rd, Fairfield QLD 4103', lat: -27.50908, lon: 153.02568, price: 159.9 },
-  { name: 'BP Moorooka', address: 'Ipswich Rd & Koopman St, Moorooka QLD 4105', lat: -27.535042, lon: 153.014338, price: 161.5 },
-  { name: 'Shell Yeronga', address: '504 Ipswich Rd, Yeronga QLD 4104', lat: -27.511462, lon: 153.032596, price: 160.3 },
-];
+const FPD_TOKEN = 'FPDAPI SubscriberToken=b834e26a-0dfa-46b2-a749-089c31046a4e';
+const FPD_BASE = 'https://fppdirectapi-prod.fuelpricesqld.com.au';
+const FPD_COUNTRY = 21; // Australia
+const FPD_REGION_LEVEL = 3; // State
+const FPD_REGION_ID = 1; // QLD
+const ULP95_FUEL_ID = 5;
+// Data is fetched from a periodically-refreshed JSON file (same origin, no CORS)
+const DATA_URL = 'data/stations.json';
 
 // ════════════ STATE ════════════
 let userLoc = null;
@@ -645,10 +636,62 @@ function calcNetBenefit(stationsWithDist) {
   }).sort((a, b) => b.netBenefit - a.netBenefit);
 }
 
-// ════════════ STATIONS ════════════
+// ════════════ STATIONS (LOCAL JSON CACHE) ════════════
+const DATA_CACHE_KEY = 'ff_stations_data';
+const DATA_CACHE_MAX_AGE = 30 * 60 * 1000; // 30 min
+
 async function fetchStations(lat, lon) {
   const userPt = { lat, lon };
-  return MOCK_STATIONS.map(s => ({ ...s, dist: haversine(userPt, s) })).filter(s => s.dist < 15).sort((a, b) => a.dist - b.dist);
+
+  // Try loading from localStorage cache
+  let stationsData = null;
+  try {
+    const raw = localStorage.getItem(DATA_CACHE_KEY);
+    if (raw) {
+      const entry = JSON.parse(raw);
+      if (entry.ts && Date.now() - entry.ts < DATA_CACHE_MAX_AGE) {
+        stationsData = entry.data;
+      }
+    }
+  } catch {}
+
+  // Fetch fresh data if cache expired
+  if (!stationsData) {
+    const res = await fetch(DATA_URL + '?_=' + Date.now());
+    if (!res.ok) throw new Error('Data fetch: ' + res.status);
+    stationsData = await res.json();
+    try {
+      localStorage.setItem(DATA_CACHE_KEY, JSON.stringify({ data: stationsData, ts: Date.now() }));
+    } catch {}
+  }
+
+  // Filter by distance and date
+  const now = Date.now();
+  const fourteenDays = 14 * 24 * 3600 * 1000;
+  const stations = [];
+
+  for (const s of stationsData) {
+    // Skip old prices
+    if (now - Date.parse(s.t) > fourteenDays) continue;
+    // Skip bad prices
+    if (s.p < 50 || s.p > 500) continue;
+
+    const dist = haversine(userPt, { lat: s.la, lon: s.lo });
+    stations.push({
+      name: s.n,
+      address: s.a,
+      lat: s.la,
+      lon: s.lo,
+      price: s.p,
+      dist,
+    });
+  }
+
+  // Filter to within 100km, sort by distance
+  const nearby = stations.filter(s => s.dist < 100).sort((a, b) => a.dist - b.dist);
+
+  // If too many for OSRM, take the 80 closest
+  return nearby.length > 80 ? nearby.slice(0, 80) : nearby;
 }
 
 async function runRank(lat, lon) {
